@@ -294,6 +294,7 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
 
   /**
    * TRUNG TÂM XỬ LÝ NỘI DUNG VĂN BẢN (RAG RENDERER)
+   * YÊU CẦU: TIÊU ĐỀ TIÊU MỤC 1.5X VÀ FONT-BLACK
    */
   const renderContent = (content: string) => {
     const cleanedContent = content.replace(/^#+\s+/gm, '');
@@ -315,6 +316,7 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
           
           return (
             <div key={lineIdx} className="mb-6 leading-tight">
+              {/* PHÓNG TO 150% VÀ TÔ ĐẬM ĐỐI VỚI TIÊU MỤC */}
               <span className="text-xl md:text-2xl font-black text-slate-950 dark:text-white inline-block mb-1">
                 {bullet}{title}
               </span>
@@ -395,6 +397,7 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
               </div>
               <div className={`flex flex-col gap-2 max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 <div className={`group relative p-5 rounded-2xl shadow-sm border leading-relaxed text-[15px] ${msg.role === 'user' ? 'bg-primary text-white border-primary rounded-tr-none' : 'bg-white dark:bg-slate-800/90 text-slate-800 dark:text-slate-100 border-slate-100 dark:border-slate-700 rounded-tl-none shadow-soft'}`}>
+                  
                   <div className={`absolute top-2 ${msg.role === 'user' ? 'left-2' : 'right-2'} opacity-0 group-hover:opacity-100 transition-opacity z-20`}>
                     <button 
                       onClick={() => copyToClipboard(msg.content, msg.id)}
@@ -405,18 +408,43 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
                       </span>
                     </button>
                   </div>
+
                   <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+                     {/* HIỂN THỊ CÁC TỆP ĐÃ ĐÍNH KÈM TRONG TIN NHẮN */}
+                     {msg.files && msg.files.length > 0 && (
+                       <div className="mb-3 flex flex-wrap gap-2">
+                         {msg.files.map((file, fIdx) => (
+                           <div key={fIdx} className={`flex items-center gap-2 p-2 rounded-xl border ${msg.role === 'user' ? 'bg-white/10 border-white/20' : 'bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800'}`}>
+                             <span className="material-symbols-outlined text-sm">{getFileIcon(file.type)}</span>
+                             <span className="text-[11px] font-bold truncate max-w-[150px]">{file.name}</span>
+                           </div>
+                         ))}
+                       </div>
+                     )}
                      <div className="text-[15px]">{renderContent(msg.content)}</div>
                   </div>
+                  
+                  {/* KHỐI HIỂN THỊ INFOGRAPHIC (BẢN ĐỒ) */}
+                  {msg.image && (
+                    <div className="mt-4 relative group/img rounded-xl overflow-hidden border-2 border-slate-100 dark:border-slate-700 shadow-lg">
+                      <img src={msg.image} className="w-full h-auto" alt="Dữ liệu Địa lí" />
+                      {msg.role === 'assistant' && (
+                        <button onClick={() => msg.image && downloadImage(msg.image)} className="absolute top-2 right-2 p-2 bg-white/90 dark:bg-slate-900/90 rounded-lg text-primary shadow-lg opacity-0 group-hover/img:opacity-100 transition-opacity">
+                          <span className="material-symbols-outlined">download</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           ))}
+          
           {(isTyping || isDesigning) && (
             <div className="flex flex-col gap-3 py-4 pl-14">
               <div className="flex items-center gap-3 px-5 py-2.5 bg-primary/5 rounded-full border border-primary/10 w-fit animate-pulse">
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest">
-                  AI đang phân tích…
+                  {isDesigning ? 'Đang vẽ minh họa số…' : 'AI đang phân tích…'}
                 </span>
               </div>
             </div>
@@ -427,12 +455,18 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
       <footer className="p-3 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 z-40">
         <div className="max-w-4xl mx-auto space-y-3">
           
-          {/* File Previews */}
+          {/* Vùng xem trước tệp */}
           <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto no-scrollbar">
             {imagePreview && (
               <div className="relative inline-block">
                 <div className="relative h-20 w-20 rounded-xl overflow-hidden border-primary shadow-lg border-2">
                   <img src={`data:${imagePreview.mimeType};base64,${imagePreview.data}`} className="h-full w-full object-cover" alt="Preview" />
+                  {isScanningImage && (
+                    <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px] flex items-center justify-center">
+                        <div className="scan-line animate-scan"></div>
+                        <span className="text-[7px] font-black text-white bg-primary/90 px-1 py-0.5 rounded uppercase z-20 tracking-tighter">ĐANG ĐỌC...</span>
+                    </div>
+                  )}
                   <button onClick={() => setImagePreview(null)} className="absolute top-1 right-1 size-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md">
                     <span className="material-symbols-outlined text-xs">close</span>
                   </button>
@@ -443,28 +477,28 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
               <div key={index} className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-xl px-2 py-1.5 max-w-[150px]">
                 <span className="material-symbols-outlined text-primary text-sm">{getFileIcon(file.mimeType)}</span>
                 <span className="text-[9px] font-black truncate text-primary">{file.name}</span>
-                <button onClick={() => removeAttachedFile(index)} className="size-4 bg-primary text-white rounded-full flex items-center justify-center">
+                <button onClick={() => removeAttachedFile(index)} className="size-4 bg-primary text-white rounded-full flex items-center justify-center ml-1">
                   <span className="material-symbols-outlined text-[10px]">close</span>
                 </button>
               </div>
             ))}
           </div>
 
-          {/* CHAT TOOLS: OPTIMIZED FOR ALL MOBILE SCREENS */}
+          {/* THANH CÔNG CỤ: TỐI ƯU HÓA KHÔNG TRÀN NÚT */}
           <div className="flex items-end gap-2 w-full">
             
-            {/* MEDIA CLUSTER: Fixed size, minimal gaps to prevent pushing other elements */}
-            <div className="flex items-center gap-1 shrink-0 p-1 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
+            {/* CỤM PHƯƠNG TIỆN BÊN TRÁI: Fixed size, minimal gaps */}
+            <div className="flex items-center gap-1 shrink-0 p-1 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
               <button 
                 onClick={toggleListening}
-                className={`size-9 rounded-xl transition-all flex items-center justify-center ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-slate-500 hover:text-primary'}`}
+                className={`size-9 rounded-xl transition-all flex items-center justify-center ${isListening ? 'bg-red-500 text-white animate-pulse' : 'text-slate-500 hover:text-primary hover:bg-white dark:hover:bg-slate-700'}`}
               >
                 <span className="material-symbols-outlined text-[20px]">{isListening ? 'mic_active' : 'mic'}</span>
               </button>
 
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="size-9 rounded-xl text-slate-500 hover:text-primary flex items-center justify-center"
+                className="size-9 rounded-xl text-slate-500 hover:text-primary hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center justify-center"
               >
                 <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
                 <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageCapture} />
@@ -472,24 +506,24 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
 
               <button 
                 onClick={() => docInputRef.current?.click()}
-                className="size-9 rounded-xl text-slate-500 hover:text-primary flex items-center justify-center"
+                className="size-9 rounded-xl text-slate-500 hover:text-primary hover:bg-white dark:hover:bg-slate-700 transition-all flex items-center justify-center"
               >
                 <span className="material-symbols-outlined text-[20px]">attach_file</span>
                 <input ref={docInputRef} type="file" multiple accept=".pdf,.docx,.pptx,.txt,.doc,.jpg,.jpeg,.png" className="hidden" onChange={handleDocUpload} />
               </button>
             </div>
 
-            {/* INPUT AREA: Flexbox ensures it takes available space without overflowing */}
+            {/* Ô NHẬP LIỆU: Flex-1 để tự co giãn mà không đẩy nút Gửi ra ngoài */}
             <div className="flex-1 flex items-center bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 px-3 py-1.5 focus-within:border-primary/50 transition-all shadow-inner overflow-hidden min-w-0">
               <textarea 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
-                className="flex-1 bg-transparent border-none p-1 focus:ring-0 text-[14px] max-h-24 resize-none dark:text-white outline-none min-w-0" 
-                placeholder="Hỏi AI..." 
+                className="flex-1 bg-transparent border-none p-1 focus:ring-0 text-[14px] max-h-24 resize-none dark:text-white outline-none min-w-0 font-medium" 
+                placeholder={isScanningImage ? "Đang đọc..." : "Hỏi AI..."} 
                 rows={1}
               />
-              {/* SEND BUTTON: Explicitly marked as flex-shrink-0 to ALWAYS stay visible */}
+              {/* NÚT GỬI: Luôn cố định kích thước và nằm trong vùng nhìn thấy */}
               <button 
                 onClick={handleSend} 
                 disabled={isTyping || isScanningImage || (!input.trim() && !imagePreview && attachedFiles.length === 0)} 
@@ -501,7 +535,7 @@ const ChatView: React.FC<ChatViewProps> = ({ onBack, isTracking, onAutoSave, res
 
           </div>
           <div className="flex items-center justify-between px-1">
-             <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Dữ liệu học liệu số an toàn</p>
+             <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Dữ liệu tri thức số an toàn</p>
           </div>
         </div>
       </footer>
