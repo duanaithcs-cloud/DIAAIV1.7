@@ -7,7 +7,7 @@
 import { GoogleGenAI, Type, GenerateContentResponse, Modality } from "@google/genai";
 import { DocumentChunk, Topic } from "../types";
 
-const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 let localKnowledgeBase: DocumentChunk[] = [];
 
@@ -102,7 +102,6 @@ export const generateGeographyAnswerStream = async (
 export const generateGeographyInfographic = async (userQuery: string, knowledgeText: string): Promise<string | null> => {
   const ai = getAI();
   
-  // Nâng cấp Prompt theo yêu cầu cụ thể
   const infographicPrompt = `
     Bạn là một chuyên gia đồ họa bản đồ học (Cartographic Architect). 
     Hãy tạo một infographic chất lượng cao giải thích về: "${userQuery}". 
@@ -111,10 +110,10 @@ export const generateGeographyInfographic = async (userQuery: string, knowledgeT
     YÊU CẦU BẢN ĐỒ & THIẾT KẾ:
     - Thể hiện ĐẦY ĐỦ và CHÍNH XÁC chủ quyền biển đảo Việt Nam.
     - Nhãn quần đảo: "Đặc khu Hoàng Sa" và "Đặc khu Trường Sa". 
-    - QUY TẮC NHÃN: TUYỆT ĐỐI KHÔNG vẽ khung nền hay box bao quanh các dòng chữ nhãn đảo. Chữ viết trực tiếp lên nền bản đồ một cách thanh thoát.
-    - MÀU SẮC: Màu chữ của "Đặc khu Hoàng Sa" và "Đặc khu Trường Sa" phải CÙNG MÀU với màu chữ tiêu đề chính của infographic để đảm bảo sự đồng nhất.
-    - CHỮ KÝ TÁC GIẢ: Ghi rõ dòng chữ "Th.s PVT THCS Hồng Hà, Ô Diên, Hà Nội" ở một góc trang trọng và tinh tế (thay thế cho bất kỳ chữ ký kỹ thuật nào khác).
-    - PHONG CÁCH: Khoa học, nét vẽ hài hòa, không phô trương, bố cục rõ ràng, chuyên nghiệp.
+    - QUY TẮC NHÃN ĐẢO: TUYỆT ĐỐI KHÔNG vẽ khung nền hay bất kỳ box bao quanh dòng chữ nhãn đảo. Chữ viết trực tiếp, thanh thoát lên nền bản đồ.
+    - MÀU SẮC NHÃN: Màu chữ của "Đặc khu Hoàng Sa" và "Đặc khu Trường Sa" phải CÙNG MÀU với màu chữ tiêu đề chính để đảm bảo sự đồng bộ khoa học.
+    - CHỮ KÝ TÁC GIẢ: Ghi rõ dòng chữ "Th.s PVT THCS Hồng Hà, Ô Diên, Hà Nội" ở một góc trang trọng và tinh tế.
+    - PHONG CÁCH: Khoa học bản đồ, nét vẽ hài hòa, không phô trương, bố cục rõ ràng, hiện đại.
     - Ngôn ngữ: Tiếng Việt.
   `;
 
